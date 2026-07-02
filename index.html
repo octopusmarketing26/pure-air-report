@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Octopus · Duct Cleaning Report Builder</title>
+<script src="assets/lib/html2pdf.bundle.min.js"></script>
+<link rel="icon" type="image/png" href="assets/logos/favicon.png">
+<link rel="stylesheet" href="_ds/octopus-design-system-1dcbeae0-d7fc-41af-888b-c84815d87e50/styles.css">
+<style>
+
+/* ═══════════════════════════════════════════════════
+   PASSWORD GATE
+═══════════════════════════════════════════════════ */
+#gate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--surface-dark);
+  display: flex; align-items: center; justify-content: center;
+}
+.gate-box {
+  background: white; border-radius: 24px; padding: 44px 52px;
+  width: 380px; text-align: center; box-shadow: 0 32px 80px rgba(19,20,59,.35);
+}
+.gate-logo { height: 100px; margin-bottom: 32px; }
+.gate-box h2 {
+  font-family: var(--font-display); font-weight: 400; font-size: 26px;
+  color: var(--text-strong); margin: 0 0 6px;
+}
+.gate-box p { font-size: 13px; color: var(--text-muted); margin: 0 0 28px; }
+.gate-input {
+  width: 100%; box-sizing: border-box;
+  padding: 13px 16px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); font-family: var(--font-body);
+  font-size: 15px; color: var(--text-strong); margin-bottom: 12px;
+  transition: border-color .15s;
+}
+.gate-input:focus { outline: none; border-color: var(--brand); }
+.gate-btn {
+  width: 100%; padding: 14px; background: var(--brand); color: white;
+  border: 0; border-radius: var(--radius-pill); font-family: var(--font-display);
+  font-size: 16px; cursor: pointer; transition: background .15s;
+}
+.gate-btn:hover { background: var(--brand-strong); }
+.gate-error {
+  color: var(--danger); font-size: 13px; margin-top: 10px;
+  display: none; line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════
+   APP LAYOUT
+═══════════════════════════════════════════════════ */
+html, body { height: 100%; margin: 0; overflow: hidden; background: var(--surface-dark); }
+#app { display: flex; height: 100vh; }
+
+/* ═══════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════ */
+#sidebar {
+  width: 390px; flex-shrink: 0;
+  background: white; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; position: relative;
+  overflow: hidden;
+}
+.sb-head {
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  background: white;
+}
+.sb-head img { height: 30px; }
+.sb-head-title { font-family: var(--font-display); font-size: 15px; color: var(--text-strong); }
+.sb-head-sub { font-size: 11px; color: var(--text-muted); }
+.sb-body { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+.sb-section { padding: 20px 24px; border-bottom: 1px solid var(--divider); }
+.sb-section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px;
+}
+.sb-foot {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 14px 24px; background: white; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; z-index: 10;
+}
+.btn-print {
+  flex: 1; padding: 12px; background: var(--brand); color: white;
+  border: 0; border-radius: var(--radius-pill); font-family: var(--font-display);
+  font-size: 14px; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 7px; transition: background .15s;
+}
+.btn-print:hover { background: var(--brand-strong); }
+.btn-print svg { flex-shrink: 0; }
+
+/* ── Form elements ── */
+.field { margin-bottom: 13px; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px;
+}
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="date"],
+.field select,
+.field textarea {
+  width: 100%; box-sizing: border-box;
+  padding: 9px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: var(--font-body);
+  font-size: 13px; color: var(--text-strong); background: white;
+  transition: border-color .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.field textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ── Property type toggle ── */
+.prop-toggle {
+  display: inline-flex; background: var(--surface-subtle);
+  border-radius: var(--radius-pill); padding: 3px;
+}
+.prop-toggle button {
+  padding: 8px 22px; border: 0; border-radius: var(--radius-pill);
+  font-family: var(--font-body); font-weight: 700; font-size: 13px;
+  cursor: pointer; background: transparent; color: var(--text-muted);
+  transition: all .15s;
+}
+.prop-toggle button.active { background: var(--brand); color: white; }
+
+/* ── Area card ── */
+.area-card {
+  border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  padding: 14px; margin-bottom: 10px; background: white;
+  transition: border-color .15s;
+}
+.area-card:focus-within { border-color: var(--brand-soft); }
+.area-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.area-num {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--brand);
+}
+.btn-remove {
+  background: none; border: 0; cursor: pointer; color: var(--text-muted);
+  width: 26px; height: 26px; border-radius: 6px; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.btn-remove:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* ── Photo picker ── */
+.photo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.photo-picker {
+  position: relative; border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm); overflow: hidden;
+  min-height: 76px; cursor: pointer; transition: border-color .15s;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-subtle);
+}
+.photo-picker:hover { border-color: var(--brand); }
+.photo-picker.filled { border-style: solid; border-color: var(--border-strong); }
+.photo-picker input[type="file"] {
+  display: none;
+}
+.photo-picker.empty { cursor: pointer; }
+.photo-picker.empty:hover { border-color: var(--brand); }
+.photo-picker.empty label { position:absolute;inset:0;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+.photo-picker img {
+  width: 100%; height: 76px; object-fit: cover; display: block;
+}
+.photo-picker .pp-empty {
+  text-align: center; padding: 10px; pointer-events: none;
+}
+.photo-picker .pp-empty svg { opacity: .35; display: block; margin: 0 auto 4px; }
+.photo-picker .pp-empty span { font-size: 11px; color: var(--text-muted); }
+.photo-picker .pp-replace {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,.6); color: white; font-size: 10px;
+  text-align: center; padding: 3px; opacity: 0; transition: opacity .15s;
+  pointer-events: none;
+}
+.photo-picker.filled:hover .pp-replace { opacity: 1; }
+.pp-actions { position:absolute;bottom:0;left:0;right:0;display:flex;gap:4px;padding:5px;background:rgba(0,0,0,.55);opacity:0;transition:opacity .15s; }
+.photo-picker.filled:hover .pp-actions { opacity:1; }
+.pp-act-btn { flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:4px 6px;background:rgba(255,255,255,.18);border:none;border-radius:5px;color:#fff;font-size:10px;font-weight:600;cursor:pointer;transition:background .12s; }
+.pp-act-btn:hover { background:rgba(255,255,255,.32); }
+.pp-act-btn input[type="file"] { display:none; }
+
+.photo-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;
+  display: block;
+}
+
+/* ── Completion photo grid ── */
+.comp-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+}
+.comp-thumb {
+  position: relative; border-radius: 8px; overflow: hidden; height: 72px;
+}
+.comp-thumb img { display: block; }
+.comp-thumb-del {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(0,0,0,.65); color: white; border: 0;
+  border-radius: 5px; cursor: pointer; padding: 2px 6px;
+  font-size: 13px; line-height: 1; transition: background .15s;
+}
+.comp-thumb-del:hover { background: var(--danger); }
+.comp-thumb-actions { position:absolute;bottom:0;left:0;right:0;display:flex;gap:3px;padding:4px;background:rgba(0,0,0,.55);opacity:0;transition:opacity .15s; }
+.comp-thumb:hover .comp-thumb-actions { opacity:1; }
+.comp-thumb-act { flex:1;display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:3px 4px;background:rgba(255,255,255,.18);border:none;border-radius:4px;color:#fff;font-size:9px;font-weight:600;cursor:pointer; }
+.comp-thumb-act input[type="file"] { display:none; }
+
+/* ── Findings ── */
+.finding-row {
+  display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px;
+}
+.finding-bullet {
+  color: var(--brand); font-size: 14px; margin-top: 11px; flex-shrink: 0;
+}
+.finding-row textarea {
+  flex: 1; padding: 8px 10px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-family: var(--font-body);
+  font-size: 12px; color: var(--text-strong); resize: vertical;
+  min-height: 52px; line-height: 1.5; transition: border-color .15s;
+}
+.finding-row textarea:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ── Add button ── */
+.btn-add {
+  display: flex; align-items: center; gap: 7px; width: 100%;
+  background: none; border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  color: var(--text-muted); font-family: var(--font-body);
+  font-size: 12px; cursor: pointer; transition: all .15s; margin-top: 4px;
+}
+.btn-add:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-tint); }
+
+/* ── Print tip ── */
+.print-tip {
+  font-size: 11px; color: var(--text-muted); line-height: 1.6;
+  background: var(--surface-subtle); border-radius: var(--radius-sm);
+  padding: 10px 12px; margin-top: 4px;
+}
+.print-tip strong { color: var(--text-strong); }
+
+/* ═══════════════════════════════════════════════════
+   REPORT SCROLL AREA
+═══════════════════════════════════════════════════ */
+#report-scroll {
+  flex: 1; overflow: auto; background: #e9e9ee; padding: 28px;
+}
+#report {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 28px; min-width: 794px;
+}
+/* Make dynamic wrapper divs invisible in flex layout */
+#ba-pages, #comp-pages, #notes-pages { display: contents; }
+
+/* ── Report page base ── */
+.rp {
+  width: 794px; flex-shrink: 0; font-family: var(--font-body);
+  color: var(--text-body);
+}
+.rp-cover {
+  height: 1123px; background: var(--surface-dark);
+  color: var(--text-on-dark); overflow: hidden; position: relative;
+  box-shadow: 0 16px 40px rgba(19,20,59,.22);
+}
+.rp-inner {
+  min-height: 1123px; background: var(--surface-page);
+  padding: 32px 64px 48px; display: flex; flex-direction: column;
+  box-shadow: 0 16px 40px rgba(19,20,59,.12);
+}
+.rp-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border); padding-bottom: 12px;
+  margin-bottom: 22px; flex-shrink: 0;
+}
+.rp-hdr img { height: 100px; }
+.rp-hdr-ref { font-size: 12px; color: var(--text-muted); }
+.rp-foot {
+  margin-top: auto; padding-top: 28px;
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-faint); flex-shrink: 0;
+}
+.rp-overline {
+  font-family: var(--font-body); font-weight: 700; font-size: 12px;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--brand); margin-bottom: 12px;
+}
+
+/* ── Photo editor overlay ── */
+#photo-editor { position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px; }
+#photo-editor.open { display:flex; }
+#pe-viewport { position:relative;width:520px;height:464px;border-radius:14px;overflow:hidden;background:#111;cursor:grab;user-select:none; }
+#pe-viewport.dragging { cursor:grabbing; }
+#pe-img { position:absolute;top:50%;left:50%;transform-origin:center center;will-change:transform; }
+.pe-bar { display:flex;align-items:center;gap:12px; }
+.pe-btn { background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;transition:background .15s; }
+.pe-btn:hover { background:rgba(255,255,255,.22); }
+.pe-btn-primary { background:var(--brand);padding:8px 24px;font-weight:700; }
+.pe-btn-primary:hover { background:var(--brand-strong); }
+.pe-label { color:rgba(255,255,255,.6);font-size:12px; }
+.pe-slider { width:120px;accent-color:var(--brand); }
+
+/* ── Photo slots in report ── */
+.rp-slot {
+  width: 100%; height: 290px; border-radius: 14px;
+  background: var(--surface-subtle); border: 1px solid var(--border);
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 12px;
+  position: relative;
+}
+.rp-slot svg { opacity: .3; }
+.rp-comp-slot {
+  width: 100%; height: 220px; border-radius: 14px;
+  background: var(--surface-subtle); border: 1px solid var(--border);
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 12px;
+}
+.rp-comp-slot img { display: block; }
+.rp-comp-slot svg { opacity: .3; }
+
+/* ── B&A set ── */
+.ba-set { break-inside: avoid; }
+.ba-set + .ba-set { margin-top: 30px; }
+
+/* ── Comp photo row ── */
+.comp-row { break-inside: avoid; }
+
+/* ═══════════════════════════════════════════════════
+   PRINT STYLES
+═══════════════════════════════════════════════════ */
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  html, body { height: auto; overflow: visible; margin: 0; background: white; }
+  * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+  #gate, #sidebar { display: none !important; }
+  #app { display: block; width: 100%; height: auto; overflow: visible; background: white; }
+  #report-scroll { display: block; overflow: visible; background: white; padding: 0; height: auto; width: 100%; }
+  #report { display: block; gap: 0; width: 100%; }
+  #ba-pages, #comp-pages, #notes-pages { display: contents; }
+  .rp { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; box-shadow: none !important; break-after: page; page-break-after: always; }
+  .rp-cover { height: 297mm; overflow: hidden; }
+  .rp-inner { min-height: 297mm; }
+  .notes-last { break-after: avoid; page-break-after: avoid; }
+  .ba-set { break-inside: avoid; page-break-inside: avoid; }
+  .comp-row { break-inside: avoid; page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ PASSWORD GATE ═══════════════ -->
+<div id="gate">
+  <div class="gate-box">
+    <img class="gate-logo" src="assets/logos/primary-dark.svg" alt="Octopus">
+    <h2>Report Builder</h2>
+    <p>Enter your team password to access the tool.</p>
+    <input class="gate-input" id="gate-pw" type="password" placeholder="Password"
+           onkeydown="if(event.key==='Enter')gateLogin()">
+    <button class="gate-btn" onclick="gateLogin()">Continue</button>
+    <div class="gate-error" id="gate-err">Incorrect password. Please try again.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app" style="display:none">
+
+  <!-- ── Sidebar ── -->
+  <aside id="sidebar">
+    <div class="sb-head">
+      <img src="assets/logos/primary-dark.svg" alt="Octopus">
+      <div>
+        <div class="sb-head-title">Report Builder</div>
+        <div class="sb-head-sub">AC Duct Cleaning · Completion Report</div>
+      </div>
+    </div>
+
+    <div class="sb-body">
+
+      <!-- JOB DETAILS -->
+      <div class="sb-section">
+        <div class="sb-section-title">Job Details</div>
+
+        <div class="field">
+          <label>Property type</label>
+          <div class="prop-toggle">
+            <button id="btn-villa" class="active" onclick="setPropType('Villa')">Villa</button>
+            <button id="btn-apt" onclick="setPropType('Apartment')">Apartment</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-ducts">Number of ducts cleaned</label>
+          <input id="f-ducts" type="number" min="1" max="99" value="3"
+                 oninput="S.ductCount=parseInt(this.value)||1;R()">
+        </div>
+
+        <div class="field">
+          <label for="f-client">Client name</label>
+          <input id="f-client" type="text" placeholder="e.g. John Doe"
+                 oninput="S.clientName=this.value;R()">
+        </div>
+
+        <div class="field">
+          <label for="f-address">Property address</label>
+          <input id="f-address" type="text" placeholder="e.g. Dubai Investments Park"
+                 oninput="S.address=this.value;R()">
+        </div>
+
+        <div class="field-row">
+          <div class="field" style="margin:0">
+            <label for="f-date">Service date</label>
+            <input id="f-date" type="date" oninput="S.serviceDate=this.value;R()">
+          </div>
+          <div class="field" style="margin:0">
+            <label for="f-job">Job reference #</label>
+            <input id="f-job" type="text" placeholder="e.g. 43792"
+                   oninput="S.jobRef=this.value;R()">
+          </div>
+        </div>
+      </div>
+
+      <!-- BEFORE & AFTER -->
+      <div class="sb-section">
+        <div class="sb-section-title">Before &amp; After Areas</div>
+        <div id="ba-list"></div>
+        <button class="btn-add" onclick="addArea()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Add area
+        </button>
+      </div>
+
+      <!-- COMPLETION PHOTOS -->
+      <div class="sb-section">
+        <div class="sb-section-title">Completion Photos</div>
+        <div id="comp-grid" class="comp-grid"></div>
+        <button class="btn-add" onclick="pickCompPhotos()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Add photo(s)
+        </button>
+        <input id="comp-input" type="file" accept="image/*" multiple style="display:none"
+               onchange="onCompPhotos(this)">
+      </div>
+
+      <!-- TECHNICIAN'S FINDINGS -->
+      <div class="sb-section">
+        <div class="sb-section-title">Technician's Findings</div>
+        <div id="findings-list"></div>
+        <button class="btn-add" onclick="addFinding()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Add finding
+        </button>
+      </div>
+
+      <!-- PRINT TIPS -->
+      <div class="sb-section" style="border-bottom:0">
+        <div class="sb-section-title">Before printing</div>
+        <div class="print-tip">
+          In the print dialog: set paper to <strong>A4</strong>, margins to <strong>None</strong>,
+          and enable <strong>Background graphics</strong> so colours and dark backgrounds print correctly.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="sb-foot">
+      <button class="btn-print" onclick="window.print()">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M4 5V2h7v3M4 10H2.5V6.5h10V10H11M4 8.5h7v4.5H4V8.5z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        Save as PDF
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Report ── -->
+  <div id="report-scroll">
+    <div id="report">
+
+      <!-- Page 1: Cover -->
+      <div class="rp rp-cover">
+        <img src="assets/logos/secondary-light.svg" alt="" style="position:absolute;right:-130px;bottom:-110px;width:540px;opacity:.09;pointer-events:none;">
+
+        <div style="position:absolute;top:32px;left:64px;right:64px;display:flex;align-items:center;justify-content:space-between;">
+          <img src="assets/logos/primary-light.svg" alt="Octopus" style="height:100px;">
+          <span style="font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-on-dark-dim);">Since 2013 · Dubai</span>
+        </div>
+
+        <div style="position:absolute;left:64px;right:64px;top:226px;">
+          <div style="font-family:var(--font-body);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin-bottom:18px;">AC Duct Cleaning Service</div>
+          <h1 style="font-family:var(--font-display);font-weight:400;font-size:70px;line-height:1.02;letter-spacing:-.01em;color:var(--text-on-dark);margin:0 0 22px;">Completion<br>Report</h1>
+          <p style="font-size:17px;line-height:1.6;color:var(--text-on-dark-dim);max-width:470px;margin:0;">A full record of the duct cleaning and sanitisation carried out at your property. With before &amp; after evidence for every area we serviced.</p>
+        </div>
+
+        <!-- Property type + ducts -->
+        <div style="position:absolute;left:64px;right:64px;top:556px;display:flex;gap:18px;align-items:stretch;">
+          <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border-on-dark);border-radius:var(--radius-lg);padding:22px 24px;">
+            <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-on-dark-dim);margin-bottom:14px;">Property type</div>
+            <div style="display:inline-flex;background:rgba(0,0,0,.22);border-radius:var(--radius-pill);padding:4px;">
+              <span id="cv-villa" style="font-family:var(--font-body);font-weight:700;font-size:14px;padding:8px 20px;border-radius:999px;background:var(--brand);color:#fff;transition:all .2s;">Villa</span>
+              <span id="cv-apt" style="font-family:var(--font-body);font-weight:700;font-size:14px;padding:8px 20px;border-radius:999px;background:transparent;color:var(--text-on-dark-dim);transition:all .2s;">Apartment</span>
+            </div>
+          </div>
+          <div style="width:230px;background:var(--brand);border-radius:var(--radius-lg);padding:22px 24px;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);margin-bottom:4px;">Number of ducts cleaned</div>
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <span id="cv-count" style="font-family:var(--font-display);font-size:56px;line-height:1;color:#fff;">03</span>
+              <span id="cv-ducts" style="font-family:var(--font-display);font-size:18px;color:rgba(255,255,255,.85);">ducts</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta grid -->
+        <div style="position:absolute;left:64px;right:64px;bottom:64px;display:grid;grid-template-columns:1fr 1fr;gap:28px 48px;border-top:1px solid var(--border-on-dark);padding-top:26px;">
+          <div>
+            <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-on-dark-dim);margin-bottom:6px;">Client</div>
+            <div id="cv-client" style="font-family:var(--font-display);font-size:20px;color:var(--text-on-dark);">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-on-dark-dim);margin-bottom:6px;">Property</div>
+            <div id="cv-address" style="font-family:var(--font-display);font-size:20px;color:var(--text-on-dark);">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-on-dark-dim);margin-bottom:6px;">Service date</div>
+            <div id="cv-date" style="font-family:var(--font-display);font-size:20px;color:var(--text-on-dark);">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-on-dark-dim);margin-bottom:6px;">Reference</div>
+            <div id="cv-ref" style="font-family:var(--font-display);font-size:20px;color:var(--text-on-dark);">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 2: Summary -->
+      <div class="rp rp-inner">
+        <div class="rp-hdr">
+          <img src="assets/logos/primary-dark.svg" alt="Octopus">
+          <span id="sm-ref" class="rp-hdr-ref">Duct Cleaning Completion Report</span>
+        </div>
+
+        <div class="rp-overline">Service summary</div>
+        <h2 style="font-family:var(--font-display);font-weight:400;font-size:34px;line-height:1.1;color:var(--text-strong);margin:0 0 12px;">Cleaned, sanitised and <strong style="color:var(--brand);">airflow restored</strong> across your home.</h2>
+        <p style="font-size:14.5px;line-height:1.65;color:var(--text-body);max-width:640px;margin:0 0 14px;">Our technicians completed a full deep clean of your AC duct system. Extracting accumulated dust, sanitising every line and verifying airflow at each vent. We use professional-grade equipment and certified products for every job:</p>
+
+        <!-- Products -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div style="display:flex;gap:12px;align-items:center;background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:10px 14px;">
+            <div style="flex-shrink:0;width:60px;height:60px;border-radius:var(--radius-md);background:#fff;border:1px solid var(--divider);display:flex;align-items:center;justify-content:center;"><img src="assets/products/ductmaster.jpg" alt="DuctMaster" style="max-width:88%;max-height:88%;object-fit:contain;"></div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:15px;color:var(--text-strong);">DuctMaster HEPA System</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.45;margin-top:2px;">American designed HEPA-filtered machine with a rotary brush head that dislodges and extracts dust from deep inside the ductwork.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:10px 14px;">
+            <div style="flex-shrink:0;width:60px;height:60px;border-radius:var(--radius-md);background:#fff;border:1px solid var(--divider);display:flex;align-items:center;justify-content:center;"><img src="assets/products/shieldme.jpg" alt="ShieldMe" style="max-width:88%;max-height:88%;object-fit:contain;"></div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:15px;color:var(--text-strong);">ShieldMe 100% Natural</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.45;margin-top:2px;">High-level disinfectant that instantly kills 99.99% of viruses &amp; bacteria. Alcohol-free, non-irritating, safe, no harsh chemicals.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats — 3 cards (mould removed) -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+          <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:16px;">
+            <div id="sm-count" style="font-family:var(--font-display);font-size:36px;line-height:1;color:var(--brand);">03</div>
+            <div id="sm-ducts" style="font-size:13px;font-weight:700;color:var(--text-strong);margin-top:6px;">Ducts cleaned</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Full extraction</div>
+          </div>
+          <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:16px;">
+            <div style="font-family:var(--font-display);font-size:36px;line-height:1;color:var(--brand);">100%</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-strong);margin-top:6px;">Sanitised</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Anti-bacterial</div>
+          </div>
+          <div style="background:var(--surface-dark);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:16px;color:var(--text-on-dark);">
+            <div id="sm-next" style="font-family:var(--font-display);font-size:30px;line-height:1;color:var(--text-on-dark);white-space:nowrap;">—</div>
+            <div style="font-size:13px;font-weight:700;margin-top:6px;">Next service</div>
+            <div style="font-size:12px;color:var(--text-on-dark-dim);margin-top:2px;">In 12 months</div>
+          </div>
+        </div>
+
+        <!-- What we did -->
+        <div style="font-family:var(--font-display);font-size:19px;color:var(--text-strong);margin-bottom:12px;">What we did</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="display:flex;gap:11px;align-items:flex-start;background:var(--surface-subtle);border-radius:var(--radius-md);padding:12px 14px;">
+            <span style="flex-shrink:0;width:22px;height:22px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;">✓</span>
+            <div><div style="font-family:var(--font-display);font-size:14px;color:var(--text-strong);">Inspection &amp; assessment</div><div style="font-size:12px;color:var(--text-muted);line-height:1.4;">Full survey of every duct, vent and grille.</div></div>
+          </div>
+          <div style="display:flex;gap:11px;align-items:flex-start;background:var(--surface-subtle);border-radius:var(--radius-md);padding:12px 14px;">
+            <span style="flex-shrink:0;width:22px;height:22px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;">✓</span>
+            <div><div style="font-family:var(--font-display);font-size:14px;color:var(--text-strong);">Deep vacuum extraction</div><div style="font-size:12px;color:var(--text-muted);line-height:1.4;">Dust, debris and allergens removed.</div></div>
+          </div>
+          <div style="display:flex;gap:11px;align-items:flex-start;background:var(--surface-subtle);border-radius:var(--radius-md);padding:12px 14px;">
+            <span style="flex-shrink:0;width:22px;height:22px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;">✓</span>
+            <div><div style="font-family:var(--font-display);font-size:14px;color:var(--text-strong);">Anti-bacterial sanitisation</div><div style="font-size:12px;color:var(--text-muted);line-height:1.4;">Treated to kill bacteria and odours.</div></div>
+          </div>
+          <div style="display:flex;gap:11px;align-items:flex-start;background:var(--surface-subtle);border-radius:var(--radius-md);padding:12px 14px;">
+            <span style="flex-shrink:0;width:22px;height:22px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;">✓</span>
+            <div><div style="font-family:var(--font-display);font-size:14px;color:var(--text-strong);">Vent, filter &amp; grille cleaning</div><div style="font-size:12px;color:var(--text-muted);line-height:1.4;">Washed, polished and refitted.</div></div>
+          </div>
+          <div style="display:flex;gap:11px;align-items:flex-start;background:var(--surface-subtle);border-radius:var(--radius-md);padding:12px 14px;">
+            <span style="flex-shrink:0;width:22px;height:22px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;">✓</span>
+            <div><div style="font-family:var(--font-display);font-size:14px;color:var(--text-strong);">Airflow test</div><div style="font-size:12px;color:var(--text-muted);line-height:1.4;">Output verified at every register.</div></div>
+          </div>
+          <div style="display:flex;gap:11px;align-items:center;background:var(--brand-tint);border-radius:var(--radius-md);padding:12px 14px;">
+            <img src="assets/illustrations/duct-cleaning.svg" alt="" style="height:44px;flex-shrink:0;">
+            <div style="font-size:12.5px;color:var(--text-body);line-height:1.4;">Carried out to <strong>Dubai Municipality</strong> hygiene standards.</div>
+          </div>
+        </div>
+
+        <!-- Certification logos -->
+        <div style="margin-top:auto;padding-top:24px;display:flex;align-items:center;justify-content:center;gap:32px;">
+          <img src="assets/logos/bicsc.jpg" alt="BICSc Corporate Member" style="height:72px;object-fit:contain;">
+          <img src="assets/logos/dubai-municipality.jpg" alt="Dubai Municipality" style="height:56px;object-fit:contain;">
+        </div>
+
+        <div class="rp-foot"><span>Octopus MEP Technical Services LLC</span><span>Page 2</span></div>
+      </div>
+
+      <!-- Dynamic B&A pages -->
+      <div id="ba-pages"></div>
+
+      <!-- Dynamic completion photos page -->
+      <div id="comp-pages"></div>
+
+      <!-- Dynamic notes pages (findings + why 6mo + banner, auto-paged) -->
+      <div id="notes-pages"></div>
+
+    </div><!-- #report -->
+  </div><!-- #report-scroll -->
+</div><!-- #app -->
+
+<!-- Photo position/zoom/rotate editor -->
+<div id="photo-editor">
+  <div style="color:#fff;font-size:14px;font-weight:700;letter-spacing:.04em;">Adjust photo — drag to reposition, scroll to zoom</div>
+  <div id="pe-viewport"><img id="pe-img" src="" alt=""></div>
+  <div class="pe-bar">
+    <span class="pe-label">Rotate</span>
+    <button class="pe-btn" onclick="peRotate(-90)">↺ 90°</button>
+    <input class="pe-slider" id="pe-rot-slider" type="range" min="-180" max="180" value="0" oninput="peSetRotate(+this.value)">
+    <button class="pe-btn" onclick="peRotate(90)">↻ 90°</button>
+    <span class="pe-label" id="pe-rot-val">0°</span>
+  </div>
+  <div class="pe-bar">
+    <span class="pe-label">Zoom</span>
+    <button class="pe-btn" onclick="peZoom(-0.1)">−</button>
+    <input class="pe-slider" id="pe-zoom-slider" type="range" min="0.5" max="4" step="0.05" value="1" oninput="peSetZoom(+this.value)">
+    <button class="pe-btn" onclick="peZoom(0.1)">+</button>
+    <span class="pe-label" id="pe-zoom-val">100%</span>
+  </div>
+  <div class="pe-bar">
+    <button class="pe-btn" onclick="peReset()">Reset</button>
+    <button class="pe-btn" onclick="peCancel()">Cancel</button>
+    <button class="pe-btn pe-btn-primary" onclick="peApply()">Apply</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// PASSWORD  —  change the string below to your password
+// ═══════════════════════════════════════════════════
+const PASS = 'octo3993';
+
+function gateLogin() {
+  const v = document.getElementById('gate-pw').value;
+  if (v === PASS) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    localStorage.setItem('oct-auth', '1');
+    renderAll();
+  } else {
+    const err = document.getElementById('gate-err');
+    err.style.display = 'block';
+    document.getElementById('gate-pw').select();
+  }
+}
+if (localStorage.getItem('oct-auth') === '1') {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let _uid = 0;
+const uid = () => ++_uid;
+
+const S = {
+  propertyType: 'Villa',
+  ductCount: 3,
+  clientName: '',
+  address: '',
+  serviceDate: '',
+  jobRef: '',
+  areas: [],      // { id, name, beforeImg, beforeCap, afterImg, afterCap }
+  photos: [],     // { id, img }
+  findings: []    // { id, text }
+};
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function fmtNextShort(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  dt.setMonth(dt.getMonth() + 12);
+  const mon = dt.toLocaleDateString('en-GB', { month: 'short' });
+  const yr  = dt.getFullYear();
+  return { mon, yr };
+}
+function fmtNextFull(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  dt.setMonth(dt.getMonth() + 12);
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function set(id, txt) {
+  const e = document.getElementById(id);
+  if (e) e.textContent = txt;
+}
+function html(id, h) {
+  const e = document.getElementById(id);
+  if (e) e.innerHTML = h;
+}
+function readImg(file, cb) {
+  const r = new FileReader();
+  r.onload = e => {
+    const dataUrl = e.target.result;
+    const im = new Image();
+    im.onload = () => cb(dataUrl, im.naturalWidth / im.naturalHeight);
+    im.onerror = () => cb(dataUrl, 1);
+    im.src = dataUrl;
+  };
+  r.readAsDataURL(file);
+}
+// Rotation-aware "cover" sizing: a rotated image needs to be larger than the plain
+// object-fit:cover size to avoid leaving gaps at the box corners once rotated.
+function coverSize(boxW, boxH, ratio, rotDeg) {
+  ratio = ratio || (boxW / boxH);
+  const rad = Math.abs(rotDeg || 0) * Math.PI / 180;
+  const c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
+  const ew = boxW * c + boxH * s, eh = boxW * s + boxH * c;
+  const boxRatio = ew / eh;
+  return ratio > boxRatio ? { w: eh * ratio, h: eh } : { w: ew, h: ew / ratio };
+}
+// t.x/t.y are stored as fractions of box width/height (resolution-independent), so the
+// same transform produces an identical proportional crop whether rendered into the 520px
+// editor canvas or the actual ~325px report slot.
+function coverImgStyle(boxW, boxH, ratio, t) {
+  t = t || {x:0,y:0,s:1,r:0};
+  const sz = coverSize(boxW, boxH, ratio, t.r);
+  const px = (t.x || 0) * boxW, py = (t.y || 0) * boxH;
+  return `position:absolute;top:50%;left:50%;width:${sz.w}px;height:${sz.h}px;transform:translate(-50%,-50%) translate(${px}px,${py}px) scale(${t.s}) rotate(${t.r}deg);transform-origin:center center;`;
+}
+
+// ═══════════════════════════════════════════════════
+// PROPERTY TYPE TOGGLE
+// ═══════════════════════════════════════════════════
+function setPropType(t) {
+  S.propertyType = t;
+  document.getElementById('btn-villa').classList.toggle('active', t === 'Villa');
+  document.getElementById('btn-apt').classList.toggle('active', t === 'Apartment');
+  R();
+}
+
+// ═══════════════════════════════════════════════════
+// AREA MANAGEMENT
+// ═══════════════════════════════════════════════════
+function newPair() { return { id: uid(), beforeImg: null, beforeCap: 'Accumulated dust & debris', afterImg: null, afterCap: 'Cleaned & sanitised', beforeT: {x:0,y:0,s:1,r:0}, afterT: {x:0,y:0,s:1,r:0} }; }
+function tStyle(t) { return `transform:translate(calc(-50% + ${t.x}px),calc(-50% + ${t.y}px)) scale(${t.s}) rotate(${t.r}deg);`; }
+function addArea() {
+  S.areas.push({ id: uid(), name: '', pairs: [newPair()] });
+  renderSidebar(); R();
+  setTimeout(() => { const cards = document.querySelectorAll('#ba-list .area-card'); if(cards.length) cards[cards.length-1].scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
+}
+function removeArea(id) {
+  S.areas = S.areas.filter(a => a.id !== id);
+  renderSidebar(); R();
+}
+function setAreaField(id, field, val) {
+  const a = S.areas.find(x => x.id === id);
+  if (a) { a[field] = val; R(); }
+}
+function addAreaPair(areaId) {
+  const a = S.areas.find(x => x.id === areaId);
+  if (a) { a.pairs.push(newPair()); renderSidebar(); R(); }
+}
+function removeAreaPair(areaId, pairId) {
+  const a = S.areas.find(x => x.id === areaId);
+  if (a && a.pairs.length > 1) { a.pairs = a.pairs.filter(p => p.id !== pairId); renderSidebar(); R(); }
+}
+function setAreaPairField(areaId, pairId, field, val) {
+  const a = S.areas.find(x => x.id === areaId);
+  if (a) { const p = a.pairs.find(x => x.id === pairId); if (p) { p[field] = val; R(); } }
+}
+function pickAreaPairImg(event, areaId, pairId, field) {
+  const f = event.target.files[0];
+  if (!f) return;
+  const ratioField = field === 'beforeImg' ? 'beforeRatio' : 'afterRatio';
+  const tField = field === 'beforeImg' ? 'beforeT' : 'afterT';
+  readImg(f, (img, ratio) => {
+    const a = S.areas.find(x => x.id === areaId);
+    if (a) { const p = a.pairs.find(x => x.id === pairId); if (p) { p[field] = img; p[ratioField] = ratio; p[tField] = {x:0,y:0,s:1,r:0}; renderSidebar(); R(); } }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// COMPLETION PHOTOS
+// ═══════════════════════════════════════════════════
+function pickCompPhotos() {
+  document.getElementById('comp-input').click();
+}
+function onCompPhotos(inp) {
+  for (const f of inp.files) {
+    readImg(f, (img, ratio) => {
+      S.photos.push({ id: uid(), img, ratio, t: {x:0,y:0,s:1,r:0} });
+      renderSidebar(); R();
+    });
+  }
+  inp.value = '';
+}
+function removePhoto(id) {
+  S.photos = S.photos.filter(p => p.id !== id);
+  renderSidebar(); R();
+}
+function replaceCompPhoto(id, inp) {
+  if (!inp.files[0]) return;
+  readImg(inp.files[0], (img, ratio) => {
+    const ph = S.photos.find(x => x.id === id);
+    if (ph) { ph.img = img; ph.ratio = ratio; ph.t = {x:0,y:0,s:1,r:0}; }
+    renderSidebar(); R();
+  });
+  inp.value = '';
+}
+
+// ═══════════════════════════════════════════════════
+// FINDINGS
+// ═══════════════════════════════════════════════════
+function addFinding() {
+  const id = uid();
+  S.findings.push({ id, text: '' });
+  renderSidebar(); R();
+  setTimeout(() => { const ta = document.getElementById('fi-' + id); if(ta) ta.focus(); }, 50);
+}
+function removeFinding(id) {
+  S.findings = S.findings.filter(f => f.id !== id);
+  renderSidebar(); R();
+}
+function setFinding(id, val) {
+  const f = S.findings.find(x => x.id === id);
+  if (f) { f.text = val; R(); }
+}
+
+// ═══════════════════════════════════════════════════
+// SIDEBAR RENDER
+// ═══════════════════════════════════════════════════
+const PPH = `<div class="pp-empty"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7.5" r="1.5" stroke="currentColor" stroke-width="1.3"/><path d="m17.5 13-4.5-4.5L5 15.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Upload</span></div>`;
+
+function renderSidebar() {
+  // Areas
+  html('ba-list', S.areas.map((a, i) => `
+    <div class="area-card">
+      <div class="area-card-head">
+        <span class="area-num">Area ${i + 1}</span>
+        <button class="btn-remove" onclick="removeArea(${a.id})" title="Remove area">×</button>
+      </div>
+      <div class="field">
+        <label>Area name</label>
+        <input type="text" value="${esc(a.name)}" placeholder="e.g. Ground Floor — AC Ducts"
+               oninput="setAreaField(${a.id},'name',this.value)">
+      </div>
+      ${a.pairs.map((p, pi) => `
+        <div style="${pi > 0 ? 'margin-top:14px;border-top:1px solid var(--border);padding-top:14px;' : ''}">
+          ${a.pairs.length > 1 ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;">Photo pair ${pi + 1}</span><button class="btn-remove" onclick="removeAreaPair(${a.id},${p.id})" title="Remove pair">×</button></div>` : ''}
+          <div class="photo-pair">
+            <div>
+              <span class="photo-label">Before photo</span>
+              ${p.beforeImg
+                ? `<div class="photo-picker filled"><img src="${p.beforeImg}" alt=""><div class="pp-actions"><label class="pp-act-btn"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="7.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="m17.5 13-4.5-4.5L5 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Replace<input type="file" accept="image/*" onchange="pickAreaPairImg(event,${a.id},${p.id},'beforeImg')"></label><button class="pp-act-btn" onclick="openPhotoEditor(${a.id},${p.id},'beforeT')"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Adjust</button></div></div>`
+                : `<div class="photo-picker empty"><label>${PPH}<input type="file" accept="image/*" onchange="pickAreaPairImg(event,${a.id},${p.id},'beforeImg')"></label></div>`}
+            </div>
+            <div>
+              <span class="photo-label">After photo</span>
+              ${p.afterImg
+                ? `<div class="photo-picker filled"><img src="${p.afterImg}" alt=""><div class="pp-actions"><label class="pp-act-btn"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="7.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="m17.5 13-4.5-4.5L5 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Replace<input type="file" accept="image/*" onchange="pickAreaPairImg(event,${a.id},${p.id},'afterImg')"></label><button class="pp-act-btn" onclick="openPhotoEditor(${a.id},${p.id},'afterT')"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Adjust</button></div></div>`
+                : `<div class="photo-picker empty"><label>${PPH}<input type="file" accept="image/*" onchange="pickAreaPairImg(event,${a.id},${p.id},'afterImg')"></label></div>`}
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
+            <div class="field" style="margin:0;">
+              <label>Before caption</label>
+              <input type="text" value="${esc(p.beforeCap)}" oninput="setAreaPairField(${a.id},${p.id},'beforeCap',this.value)">
+            </div>
+            <div class="field" style="margin:0;">
+              <label>After caption</label>
+              <input type="text" value="${esc(p.afterCap)}" oninput="setAreaPairField(${a.id},${p.id},'afterCap',this.value)">
+            </div>
+          </div>
+        </div>
+      `).join('')}
+      <button class="btn-add" onclick="addAreaPair(${a.id})" style="margin-top:12px;width:100%;font-size:11px;">
+        <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Add photo pair
+      </button>
+    </div>
+  `).join(''));
+
+  // Completion photos
+  html('comp-grid', S.photos.map(p => `
+    <div class="comp-thumb">
+      <img src="${p.img}" alt="" style="${tStyle(p.t||{x:0,y:0,s:1,r:0})}position:absolute;top:50%;left:50%;width:100%;height:100%;object-fit:cover;">
+      <button class="comp-thumb-del" onclick="removePhoto(${p.id})">×</button>
+      <div class="comp-thumb-actions">
+        <label class="comp-thumb-act">
+          <svg width="9" height="9" viewBox="0 0 13 13" fill="none"><path d="M2 11L11 2M11 2H6M11 2v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Replace<input type="file" accept="image/*" onchange="replaceCompPhoto(${p.id},this)">
+        </label>
+        <button class="comp-thumb-act" onclick="openPhotoEditor('comp',${p.id},null)">
+          <svg width="9" height="9" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 4v5M4 6.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Adjust
+        </button>
+      </div>
+    </div>
+  `).join(''));
+
+  // Findings
+  html('findings-list', S.findings.map((f, i) => `
+    <div class="finding-row">
+      <span class="finding-bullet">●</span>
+      <textarea id="fi-${f.id}" placeholder="Enter finding…" oninput="setFinding(${f.id},this.value)">${esc(f.text)}</textarea>
+      <button class="btn-remove" onclick="removeFinding(${f.id})" title="Remove">×</button>
+    </div>
+  `).join(''));
+}
+
+// ═══════════════════════════════════════════════════
+// REPORT RENDER  (R = shorthand)
+// ═══════════════════════════════════════════════════
+const SLOT_PH = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="22" height="22" rx="3" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="2" stroke="currentColor" stroke-width="1.4"/><path d="m24 18-6-6L6 24" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function R() {
+  const { propertyType, ductCount, clientName, address, serviceDate, jobRef, areas, photos, findings } = S;
+  const cnt = String(ductCount).padStart(2, '0');
+  const ref = jobRef ? `Duct Cleaning Completion Report · Job #${jobRef}` : 'Duct Cleaning Completion Report';
+  const isV = propertyType === 'Villa';
+
+  // ── Cover ──
+  set('cv-count', cnt);
+  const ductWord = ductCount === 1 ? 'duct' : 'ducts';
+  set('cv-ducts', ductWord);
+  set('sm-ducts', ductWord === 'duct' ? 'Duct cleaned' : 'Ducts cleaned');
+  set('cv-client', clientName || '—');
+  set('cv-address', address || '—');
+  set('cv-date', fmtDate(serviceDate));
+  set('cv-ref', jobRef ? `Job #${jobRef}` : '—');
+  const pillOn  = 'font-family:var(--font-body);font-weight:700;font-size:14px;padding:8px 20px;border-radius:999px;background:var(--brand);color:#fff;transition:all .2s;';
+  const pillOff = 'font-family:var(--font-body);font-weight:700;font-size:14px;padding:8px 20px;border-radius:999px;background:transparent;color:var(--text-on-dark-dim);transition:all .2s;';
+  const ev = document.getElementById('cv-villa'); if(ev) ev.style.cssText = isV ? pillOn : pillOff;
+  const ea = document.getElementById('cv-apt');   if(ea) ea.style.cssText = isV ? pillOff : pillOn;
+
+  // ── Page title (used as PDF filename in browser print) ──
+  const slugClient = (S.clientName || 'Client').trim();
+  document.title = `AC Duct Cleaning Completion Report - ${slugClient}`;
+
+  // ── Summary ──
+  set('sm-count', cnt);
+  set('sm-ref', ref);
+  const ns = fmtNextShort(serviceDate);
+  const nsEl = document.getElementById('sm-next');
+  if (nsEl) nsEl.textContent = ns === '—' ? '—' : `${ns.mon} ${ns.yr}`;
+
+  // ── B&A pages — flatten all pairs, max 2 pairs per page ──
+  const allPairs = [];
+  for (const area of areas) {
+    for (const pair of area.pairs) allPairs.push({ areaName: area.name, pair });
+  }
+  const PAIRS_PER_PAGE = 2;
+  const chunks = [];
+  for (let i = 0; i < allPairs.length; i += PAIRS_PER_PAGE) chunks.push(allPairs.slice(i, i + PAIRS_PER_PAGE));
+
+  html('ba-pages', chunks.map((chunk, ci) => {
+    const pageNum = 3 + ci;
+    return `
+      <div class="rp rp-inner">
+        <div class="rp-hdr">
+          <img src="assets/logos/primary-dark.svg" alt="Octopus">
+          <span class="rp-hdr-ref">${esc(ref)}</span>
+        </div>
+        <div class="rp-overline">Before &amp; After</div>
+        <h2 style="font-family:var(--font-display);font-weight:400;font-size:30px;color:var(--text-strong);margin:0 0 ${ci===0?'4':'28'}px;">
+          ${ci === 0 ? 'The difference, area by area' : 'Continued'}
+        </h2>
+        ${ci===0 ? '<p style="font-size:14px;color:var(--text-muted);margin:0 0 28px;">Photographed on site during the service.</p>' : ''}
+        ${chunk.map(({ areaName, pair: p }, ai) => {
+          const prevName = ai > 0 ? chunk[ai-1].areaName : (ci > 0 ? chunks[ci-1][chunks[ci-1].length-1].areaName : null);
+          const showLabel = areaName !== prevName;
+          return `
+          <div class="ba-set"${ai > 0 ? ' style="margin-top:30px;"' : ''}>
+            ${showLabel ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <span style="width:8px;height:8px;border-radius:999px;background:var(--brand);flex-shrink:0;display:inline-block;"></span>
+              <span style="font-family:var(--font-display);font-size:18px;color:var(--text-strong);">${esc(areaName) || 'Area name'}</span>
+            </div>` : ''}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div>
+                <div class="rp-slot">
+                  ${p.beforeImg ? `<img src="${p.beforeImg}" alt="" style="${coverImgStyle(325,290,p.beforeRatio,p.beforeT)}">` : `${SLOT_PH}<span>Before photo</span>`}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+                  <span style="display:inline-flex;padding:3px 11px;border-radius:999px;background:var(--warning-bg);color:#9a6f00;font-weight:700;font-size:12px;">Before</span>
+                  <span style="font-size:13px;color:var(--text-muted);">${esc(p.beforeCap)}</span>
+                </div>
+              </div>
+              <div>
+                <div class="rp-slot">
+                  ${p.afterImg ? `<img src="${p.afterImg}" alt="" style="${coverImgStyle(325,290,p.afterRatio,p.afterT)}">` : `${SLOT_PH}<span>After photo</span>`}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+                  <span style="display:inline-flex;padding:3px 11px;border-radius:999px;background:var(--success-bg);color:var(--success);font-weight:700;font-size:12px;">After</span>
+                  <span style="font-size:13px;color:var(--text-muted);">${esc(p.afterCap)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `; }).join('')}
+        <div class="rp-foot"><span>Octopus MEP Technical Services LLC</span><span>Page ${pageNum}</span></div>
+      </div>
+    `;
+  }).join(''));
+
+  // ── Completion photos pages ──
+  const baPageCount = chunks.length;
+  const compStart   = 3 + baPageCount;
+  const PHOTOS_PER_PAGE = 6; // 3 rows × 2 cols
+
+  if (photos.length === 0) {
+    html('comp-pages', '');
+  } else {
+    const pages = [];
+    for (let i = 0; i < photos.length; i += PHOTOS_PER_PAGE) pages.push(photos.slice(i, i + PHOTOS_PER_PAGE));
+    const lastPi = pages.length - 1;
+    html('comp-pages', pages.map((pg, pi) => {
+      // The last page also carries the "Every job, fully documented" banner — shrink the
+      // row height just enough so 3 rows + banner still fit within one A4 page.
+      const slotH = pi === lastPi ? 178 : 220;
+      return `
+      <div class="rp rp-inner">
+        <div class="rp-hdr">
+          <img src="assets/logos/primary-dark.svg" alt="Octopus">
+          <span class="rp-hdr-ref">${esc(ref)}</span>
+        </div>
+        <div class="rp-overline">Completion photos</div>
+        <h2 style="font-family:var(--font-display);font-weight:400;font-size:30px;color:var(--text-strong);margin:0 0 ${pi===0?'4':'28'}px;">
+          ${pi === 0 ? 'Work completed on site' : 'Continued'}
+        </h2>
+        ${pi===0 ? '<p style="font-size:14px;color:var(--text-muted);margin:0 0 28px;">Additional photos from the completed service.</p>' : ''}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          ${pg.map(p => `
+            <div class="comp-row">
+              <div class="rp-comp-slot" style="position:relative;overflow:hidden;height:${slotH}px;"><img src="${p.img}" alt="" style="${coverImgStyle(325,slotH,p.ratio,p.t)}"></div>
+            </div>
+          `).join('')}
+        </div>
+
+        ${pi === lastPi ? `
+        <div style="margin-top:28px;background:var(--surface-subtle);border-radius:var(--radius-lg);padding:22px 26px;display:flex;align-items:center;gap:18px;">
+          <img src="assets/illustrations/duct-cleaning.svg" alt="" style="height:64px;flex-shrink:0;">
+          <div>
+            <div style="font-family:var(--font-display);font-size:17px;color:var(--text-strong);margin-bottom:3px;">Every job, fully documented</div>
+            <div style="font-size:13.5px;color:var(--text-body);line-height:1.6;">We photograph our work so you can see exactly what was done. No guesswork, full transparency.</div>
+          </div>
+        </div>` : ''}
+
+        <div class="rp-foot"><span>Octopus MEP Technical Services LLC</span><span>Page ${compStart + pi}</span></div>
+      </div>
+    `;
+    }).join(''));
+  }
+
+  // Notes page(s): dynamic — render after we know all prior page counts
+  const compPageCount = photos.length === 0 ? 0 : Math.ceil(photos.length / 6);
+  const notesBasePageNum = 3 + chunks.length + compPageCount;
+  renderNotesPages(ref, serviceDate, notesBasePageNum);
+}
+
+// ── Dynamic notes page(s) ──
+function renderNotesPages(ref, serviceDate, basePageNum) {
+  const findings = S.findings || [];
+  const nextFull = fmtNextFull(serviceDate);
+
+  const findingsHTML = findings.length ? `<div style="background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 28px;"><div style="font-family:var(--font-display);font-size:18px;color:var(--text-strong);margin-bottom:16px;">Technician's findings</div><div style="display:flex;flex-direction:column;gap:12px;">${findings.map(f=>`<div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;color:var(--brand);font-size:14px;line-height:1.55;">●</span><span style="font-size:13.5px;line-height:1.55;color:var(--text-body);word-break:break-word;">${esc(f.text)||'<em style="color:var(--text-muted);">Empty finding</em>'}</span></div>`).join('')}</div></div>` : null;
+
+  const whyHTML = `<div><div class="rp-overline" style="margin-bottom:12px;">Why every 12 months?</div><h2 style="font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.2;color:var(--text-strong);margin:0 0 16px;">Cleaner air, better cooling</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;"><div style="display:flex;gap:11px;"><span style="flex-shrink:0;color:var(--brand);font-size:15px;line-height:1.6;">●</span><span style="font-size:13.5px;line-height:1.55;color:var(--text-body);">Improves indoor air quality by removing dust, allergens and mould.</span></div><div style="display:flex;gap:11px;"><span style="flex-shrink:0;color:var(--brand);font-size:15px;line-height:1.6;">●</span><span style="font-size:13.5px;line-height:1.55;color:var(--text-body);">Helps prevent respiratory issues and bad odours.</span></div><div style="display:flex;gap:11px;"><span style="flex-shrink:0;color:var(--brand);font-size:15px;line-height:1.6;">●</span><span style="font-size:13.5px;line-height:1.55;color:var(--text-body);">Supports better AC performance and energy efficiency.</span></div><div style="display:flex;gap:11px;"><span style="flex-shrink:0;color:var(--brand);font-size:15px;line-height:1.6;">●</span><span style="font-size:13.5px;line-height:1.55;color:var(--text-body);">Reduces strain on the system, extending its lifespan.</span></div><div style="display:flex;gap:11px;"><span style="flex-shrink:0;color:var(--brand);font-size:15px;line-height:1.6;">●</span><span style="font-size:13.5px;line-height:1.55;color:var(--text-body);">Especially important in dusty climates like the UAE.</span></div></div></div>`;
+
+  const bannerHTML = `<div><div style="background:var(--surface-dark);border-radius:var(--radius-lg);padding:28px 34px;display:flex;align-items:center;justify-content:space-between;color:var(--text-on-dark);"><div><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-on-dark-dim);margin-bottom:6px;">Next duct service due</div><div style="font-family:var(--font-display);font-size:32px;color:var(--text-on-dark);">${esc(nextFull)}</div></div><a href="https://wa.me/8003993?text=Hi.%20I%20would%20like%20to%20book%20my%20next%20AC%20duct%20cleaning%20service." target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;font-family:var(--font-display);font-size:16px;color:var(--on-brand);background:var(--brand);border-radius:var(--radius-pill);text-decoration:none;">Book next service</a></div><div style="margin-top:26px;text-align:center;"><p style="font-size:15px;line-height:1.6;color:var(--text-body);max-width:520px;margin:0 auto;">Thank you for choosing <strong style="color:var(--brand);">Octopus</strong>. Just give us a ring on <strong style="color:var(--text-strong);">800 3993</strong> for your next service. We've got you covered, anytime.</p></div></div>`;
+
+  // Measure heights in an off-screen div (same width as content area: 794 - 64*2 = 666px)
+  const measurer = document.createElement('div');
+  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;width:666px;visibility:hidden;pointer-events:none;';
+  document.body.appendChild(measurer);
+  function measure(h) { measurer.innerHTML = h; return measurer.firstElementChild.offsetHeight; }
+  const H_FINDINGS = findingsHTML ? measure(findingsHTML) : 0;
+  const H_WHY      = measure(whyHTML);
+  const H_BANNER   = measure(bannerHTML);
+  document.body.removeChild(measurer);
+
+  // Available content height per page (1123 total − 32 top padding − 48 bottom padding − 138 header − 42 footer)
+  const AVAIL = 863;
+  const GAP   = 24; // gap between blocks
+
+  const blocks = [
+    findingsHTML ? { h: H_FINDINGS, html: findingsHTML } : null,
+    { h: H_WHY,    html: whyHTML   },
+    { h: H_BANNER, html: bannerHTML },
+  ].filter(Boolean);
+
+  const pages = [];
+  let cur = [], curH = 0;
+  for (const b of blocks) {
+    const needed = cur.length > 0 ? b.h + GAP : b.h;
+    if (cur.length > 0 && curH + needed > AVAIL) {
+      pages.push(cur);
+      cur = [b.html]; curH = b.h;
+    } else {
+      cur.push(b.html); curH += needed;
+    }
+  }
+  if (cur.length) pages.push(cur);
+
+  const hdr = `<div class="rp-hdr"><img src="assets/logos/primary-dark.svg" alt="Octopus"><span class="rp-hdr-ref">${esc(ref)}</span></div>`;
+  html('notes-pages', pages.map((pg, pi) => {
+    const isLast = pi === pages.length - 1;
+    return `<div class="rp rp-inner${isLast ? ' notes-last' : ''}" style="display:flex;flex-direction:column;">${hdr}<div style="display:flex;flex-direction:column;gap:${GAP}px;flex:1;">${pg.join('')}</div><div class="rp-foot"><span>Octopus MEP Technical Services LLC</span><span>Page ${basePageNum + pi}</span></div></div>`;
+  }).join(''));
+}
+
+function renderAll() { renderSidebar(); R(); }
+
+// ── Photo editor ──
+// Uses the same coverImgStyle() math as the report (box ratio 325:290 for B&A,
+// 325:220 for completion photos), including rotation compensation, so the editor
+// preview is pixel-accurate to what ends up in the live preview and the PDF.
+let _peAreaId, _pePairId, _peField, _peT, _peRatio, _peVpW, _peVpH;
+const _pe = { drag: false, startX: 0, startY: 0 };
+function openPhotoEditor(areaId, pairId, field) {
+  const vp = document.getElementById('pe-viewport');
+  let imgSrc, existingT;
+  if (areaId === 'comp') {
+    const ph = S.photos.find(x => x.id === pairId);
+    if (!ph || !ph.img) return;
+    imgSrc = ph.img; existingT = ph.t; _peRatio = ph.ratio;
+    vp.style.height = '352px'; // matches rp-comp-slot box ratio (325:220) at 520px wide
+    _peVpW = 520; _peVpH = 352;
+  } else {
+    const a = S.areas.find(x => x.id === areaId);
+    if (!a) return;
+    const p = a.pairs.find(x => x.id === pairId);
+    if (!p) return;
+    imgSrc = field === 'beforeT' ? p.beforeImg : p.afterImg;
+    if (!imgSrc) return;
+    existingT = p[field];
+    _peRatio = field === 'beforeT' ? p.beforeRatio : p.afterRatio;
+    vp.style.height = '464px'; // matches rp-slot box ratio (325:290) at 520px wide
+    _peVpW = 520; _peVpH = 464;
+  }
+  _peAreaId = areaId; _pePairId = pairId; _peField = field;
+  _peT = Object.assign({x:0,y:0,s:1,r:0}, existingT);
+  document.getElementById('pe-img').src = imgSrc;
+  peUpdateUI();
+  document.getElementById('photo-editor').classList.add('open');
+}
+function peUpdateUI() {
+  document.getElementById('pe-img').style.cssText = coverImgStyle(_peVpW, _peVpH, _peRatio, _peT);
+  document.getElementById('pe-rot-val').textContent = _peT.r + '°';
+  document.getElementById('pe-zoom-val').textContent = Math.round(_peT.s * 100) + '%';
+  document.getElementById('pe-rot-slider').value = _peT.r;
+  document.getElementById('pe-zoom-slider').value = _peT.s;
+}
+function peRotate(deg) { _peT.r = Math.round(_peT.r + deg); peUpdateUI(); }
+function peSetRotate(v) { _peT.r = v; peUpdateUI(); }
+function peZoom(d) { _peT.s = Math.min(4, Math.max(0.2, Math.round((_peT.s + d) * 20) / 20)); peUpdateUI(); }
+function peSetZoom(v) { _peT.s = v; peUpdateUI(); }
+function peReset() { _peT = {x:0,y:0,s:1,r:0}; peUpdateUI(); }
+function peCancel() { document.getElementById('photo-editor').classList.remove('open'); }
+function peApply() {
+  if (_peAreaId === 'comp') {
+    const ph = S.photos.find(x => x.id === _pePairId);
+    if (ph) ph.t = Object.assign({}, _peT);
+  } else {
+    const a = S.areas.find(x => x.id === _peAreaId);
+    if (a) { const p = a.pairs.find(x => x.id === _pePairId); if (p) p[_peField] = Object.assign({}, _peT); }
+  }
+  document.getElementById('photo-editor').classList.remove('open');
+  renderSidebar(); R();
+}
+// Drag to pan
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const vp = document.getElementById('pe-viewport');
+    vp.addEventListener('mousedown', function(e) {
+      _pe.drag = true;
+      _pe.startX = e.clientX - _peT.x * vp.clientWidth;
+      _pe.startY = e.clientY - _peT.y * vp.clientHeight;
+      vp.classList.add('dragging'); e.preventDefault();
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!_pe.drag) return;
+      _peT.x = (e.clientX - _pe.startX) / vp.clientWidth;
+      _peT.y = (e.clientY - _pe.startY) / vp.clientHeight;
+      peUpdateUI();
+    });
+    document.addEventListener('mouseup', function() { _pe.drag = false; document.getElementById('pe-viewport').classList.remove('dragging'); });
+    vp.addEventListener('wheel', function(e) {
+      e.preventDefault(); peZoom(e.deltaY < 0 ? 0.05 : -0.05);
+    }, { passive: false });
+  });
+})();
+
+// ── PDF Download ──
+async function downloadPDF() {
+  const btn = document.getElementById('btn-download');
+  if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
+
+  const jobRef = S.jobRef ? `Job-${S.jobRef}` : 'Completion-Report';
+  const client = S.clientName ? S.clientName.replace(/\s+/g, '-') : 'Octopus';
+  const filename = `${client}-Duct-Cleaning-${jobRef}.pdf`;
+
+  const report = document.getElementById('report');
+  const pages  = Array.from(document.querySelectorAll('.rp'));
+
+  // Save styles, then force each page to exactly A4 height with no gap/shadow
+  const saved = pages.map(p => ({
+    h: p.style.height, mh: p.style.minHeight,
+    ov: p.style.overflow, bs: p.style.boxShadow
+  }));
+  const savedGap = report.style.gap;
+  report.style.gap = '0';
+  pages.forEach(p => {
+    p.style.height      = '1123px';
+    p.style.minHeight   = '1123px';
+    p.style.overflow    = 'hidden';
+    p.style.boxShadow   = 'none';
+  });
+
+  const opt = {
+    margin: 0,
+    filename,
+    image: { type: 'jpeg', quality: 0.97 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    await html2pdf().set(opt).from(report).save();
+  } finally {
+    report.style.gap = savedGap;
+    pages.forEach((p, i) => {
+      p.style.height    = saved[i].h;
+      p.style.minHeight = saved[i].mh;
+      p.style.overflow  = saved[i].ov;
+      p.style.boxShadow = saved[i].bs;
+    });
+    if (btn) {
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4.5 7l3 3 3-3M2 12h11" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Download PDF';
+      btn.disabled = false;
+    }
+  }
+}
+
+// ── Boot ──
+if (document.getElementById('app').style.display !== 'none') {
+  renderAll();
+} else {
+  // will be called after login
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+/* Octopus brand webfonts.
+   Baloo  — primary heading / display face (single weight, rounded).
+   Verdana — secondary & body face (regular + bold, with italics).
+   All shipped from the official brand asset library (assets/fonts). */
+
+@font-face {
+  font-family: "Baloo";
+  src: url("../assets/fonts/Baloo-Regular.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Verdana Brand";
+  src: url("../assets/fonts/Verdana.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Verdana Brand";
+  src: url("../assets/fonts/Verdana-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Verdana Brand";
+  src: url("../assets/fonts/Verdana-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Verdana Brand";
+  src: url("../assets/fonts/Verdana-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}

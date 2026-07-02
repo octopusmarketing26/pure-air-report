@@ -1,0 +1,97 @@
+/* ── Octopus colour system ──────────────────────────────────────────────
+   Source of truth: OCT - Colorset / Visual Identity System (Brand 2021).
+   Four named brand colours + a small functional ramp built around them.   */
+
+:root {
+  /* ── Brand core (named in the official swatch) ── */
+  --oct-purple: #C028B9;   /* "Byzantine"  · PANTONE PURPLE C · primary */
+  --oct-navy:   #13143B;   /* "Haiti"      · PANTONE 2768 CP  · ink / dark surface */
+  --oct-zeus:   #373A36;   /* "Zeus"       · PANTONE 447 C    · neutral charcoal */
+  --oct-white:  #FFFFFF;
+  --oct-mist:   #F7F7F7;   /* off-white surface (from guideline) */
+
+  /* ── Purple ramp (derived; --purple-600 is the brand purple) ── */
+  --purple-50:  #FBEEFA;
+  --purple-100: #F6D9F4;
+  --purple-200: #ECB2E8;
+  --purple-300: #E08CDB;
+  --purple-400: #D158C9;
+  --purple-500: #C82DC0;
+  --purple-600: #C028B9;   /* = --oct-purple */
+  --purple-700: #9C1F96;
+  --purple-800: #761771;
+  --purple-900: #4F0F4C;
+
+  /* ── Navy / ink ramp (derived from Haiti) ── */
+  --navy-50:  #ECECF1;
+  --navy-100: #C9CAD6;
+  --navy-300: #6E7090;
+  --navy-500: #2C2E59;
+  --navy-700: #1B1C46;
+  --navy-900: #13143B;     /* = --oct-navy */
+
+  /* ── Neutral grey ramp (warm, anchored on Zeus) ── */
+  --grey-50:  #F7F7F7;     /* = --oct-mist */
+  --grey-100: #EDEDEC;
+  --grey-200: #DCDCDA;
+  --grey-300: #C2C2BF;
+  --grey-400: #9A9B97;
+  --grey-500: #6F716C;
+  --grey-600: #54564F;
+  --grey-700: #43453F;
+  --grey-800: #373A36;     /* = --oct-zeus */
+  --grey-900: #23241F;
+
+  /* ── Functional / status ── */
+  --green-500:  #1F9D6B;   /* success — pulled toward a clean service-green */
+  --green-50:   #E6F5EE;
+  --amber-500:  #E2A203;   /* warning / rating star */
+  --amber-50:   #FCF3DC;
+  --red-500:    #D5403A;   /* error / urgent */
+  --red-50:     #FBE9E8;
+  --blue-500:   #2E74B5;   /* info / "water" services */
+  --blue-50:    #E7F0F8;
+
+  /* ────────────────────────────────────────────────────────────────────
+     Semantic aliases — reference these in product & template work.        */
+
+  /* Brand */
+  --brand:            var(--oct-purple);
+  --brand-strong:     var(--purple-700);
+  --brand-soft:       var(--purple-100);
+  --brand-tint:       var(--purple-50);
+  --on-brand:         var(--oct-white);
+
+  /* Ink / text */
+  --text-strong:      var(--oct-navy);     /* headlines */
+  --text-body:        var(--grey-800);     /* body copy */
+  --text-muted:       var(--grey-500);     /* captions / meta */
+  --text-faint:       var(--grey-400);
+  --text-on-dark:     var(--oct-white);
+  --text-on-dark-dim: rgba(255,255,255,0.72);
+  --text-link:        var(--oct-purple);
+
+  /* Surfaces */
+  --surface-page:     var(--oct-white);
+  --surface-subtle:   var(--oct-mist);     /* section bands */
+  --surface-card:     var(--oct-white);
+  --surface-sunken:   var(--grey-50);
+  --surface-dark:     var(--oct-navy);     /* hero / footer / dark sections */
+  --surface-brand:    var(--oct-purple);
+
+  /* Borders & lines */
+  --border:           var(--grey-200);
+  --border-strong:    var(--grey-300);
+  --border-on-dark:   rgba(255,255,255,0.16);
+  --divider:          var(--grey-100);
+
+  /* Status semantics */
+  --success:  var(--green-500);  --success-bg: var(--green-50);
+  --warning:  var(--amber-500);  --warning-bg: var(--amber-50);
+  --danger:   var(--red-500);    --danger-bg:  var(--red-50);
+  --info:     var(--blue-500);   --info-bg:    var(--blue-50);
+  --rating:   var(--amber-500);
+
+  /* Focus ring */
+  --focus-ring: rgba(192,40,185,0.35);
+}
