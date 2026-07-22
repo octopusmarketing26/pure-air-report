@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Octopus · Duct Cleaning Report Builder</title>
+<title>Octopus · Pure Air Report Builder</title>
 <script src="assets/lib/html2pdf.bundle.min.js"></script>
 <link rel="icon" type="image/png" href="assets/logos/favicon.png">
 <link rel="stylesheet" href="ds/octopus-design-system-1dcbeae0-d7fc-41af-888b-c84815d87e50/styles.css">
@@ -380,7 +380,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; background: var(--surfac
       <img src="assets/logos/primary-dark.svg" alt="Octopus">
       <div>
         <div class="sb-head-title">Report Builder</div>
-        <div class="sb-head-sub">AC Duct Cleaning · Completion Report</div>
+        <div class="sb-head-sub">Pure Air Service · Completion Report</div>
       </div>
     </div>
 
@@ -957,7 +957,6 @@ function R() {
   set('cv-count', cnt);
   const unitWord = ductCount === 1 ? 'AC Unit' : 'AC Units';
   set('cv-ducts', unitWord);
-  set('sm-ducts', ductCount === 1 ? 'Duct cleaned' : 'Ducts cleaned');
   set('cv-client', clientName || '—');
   set('cv-address', address || '—');
   set('cv-date', fmtDate(serviceDate));
