@@ -568,20 +568,19 @@ html, body { height: 100%; margin: 0; overflow: hidden; background: var(--surfac
           </div>
         </div>
 
-        <!-- Products row 2 — placeholder content, to be replaced -->
+        <!-- Products row 2 -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
           <div style="display:flex;gap:12px;align-items:center;background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:10px 14px;">
-            <div style="flex-shrink:0;width:104px;height:104px;border-radius:var(--radius-md);background:#fff;border:1px solid var(--divider);display:flex;align-items:center;justify-content:center;"><img src="assets/products/ductmaster.jpg" alt="DuctMaster" style="max-width:88%;max-height:88%;object-fit:contain;"></div>
+            <div style="flex-shrink:0;width:104px;height:104px;border-radius:var(--radius-md);background:#fff;border:1px solid var(--divider);display:flex;align-items:center;justify-content:center;"><img src="assets/products/simplegreen.jpg" alt="Simple Green" style="max-width:88%;max-height:88%;object-fit:contain;"></div>
             <div>
-              <div style="font-family:var(--font-display);font-size:15px;color:var(--text-strong);">DuctMaster HEPA System</div>
-              <div style="font-size:12px;color:var(--text-muted);line-height:1.45;margin-top:2px;">American designed HEPA-filtered machine with a rotary brush head that dislodges and extracts dust from deep inside the ductwork.</div>
+              <div style="font-family:var(--font-display);font-size:15px;color:var(--text-strong);">Simple Green Cleaner</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.45;margin-top:2px;">Professional-strength foam that clings to the coil, lifting dirt and grease. Non-caustic, non-flammable and NSF registered.</div>
             </div>
           </div>
           <div style="display:flex;gap:12px;align-items:center;background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:10px 14px;">
-            <div style="flex-shrink:0;width:104px;height:104px;border-radius:var(--radius-md);background:#fff;border:1px solid var(--divider);display:flex;align-items:center;justify-content:center;"><img src="assets/products/shieldme.jpg" alt="ShieldMe" style="max-width:88%;max-height:88%;object-fit:contain;"></div>
             <div>
-              <div style="font-family:var(--font-display);font-size:15px;color:var(--text-strong);">ShieldMe 100% Natural</div>
-              <div style="font-size:12px;color:var(--text-muted);line-height:1.45;margin-top:2px;">High-level disinfectant that instantly kills 99.99% of viruses &amp; bacteria. Alcohol-free, non-irritating, safe, no harsh chemicals.</div>
+              <div style="font-family:var(--font-display);font-size:15px;color:var(--text-strong);">Coil Jet System</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.45;margin-top:2px;">Flushes built-up debris from the evaporator coil, improving air quality and the cooling efficiency of your unit.</div>
             </div>
           </div>
         </div>
@@ -875,7 +874,7 @@ function renderSidebar() {
       </div>
       <div class="field">
         <label>Area name</label>
-        <input type="text" value="${esc(a.name)}" placeholder="e.g. Ground Floor — AC Ducts"
+        <input type="text" value="${esc(a.name)}" placeholder="e.g. Ground Floor — AC Unit"
                oninput="setAreaField(${a.id},'name',this.value)">
       </div>
       ${a.pairs.map((p, pi) => `
